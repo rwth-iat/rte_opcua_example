@@ -112,7 +112,7 @@
     END_VARIABLE_VALUES;
  END_INSTANCE;
 
- INSTANCE  /TechUnits/UAServer :
+ INSTANCE  /TechUnits/Server :
     CLASS /acplt/opcua/server;
     VARIABLE_VALUES
       run : INPUT BOOL = FALSE;
@@ -131,8 +131,8 @@
     END_VARIABLE_VALUES;
  END_INSTANCE;
 
- INSTANCE  /TechUnits/UAServer/ExampleInterface :
-    CLASS /acplt/opcuaExample/customInterface;
+ INSTANCE  /TechUnits/Server/Interface :
+    CLASS /acplt/demo/interface;
     VARIABLE_VALUES
       entryPath : INPUT STRING = "/";
       useOvTrafo : INPUT BOOL = TRUE;
@@ -152,25 +152,9 @@
  LINK
      OF_ASSOCIATION tasklist;
      PARENT taskparent : CLASS unknown
-           = /TechUnits/ExampleFunctionchart;
-     CHILDREN taskchild : CLASS unknown
-           = {/TechUnits/ExampleFunctionchart.intask};
- END_LINK;
-
- LINK
-     OF_ASSOCIATION tasklist;
-     PARENT taskparent : CLASS unknown
            = /Tasks/UrTask;
      CHILDREN taskchild : CLASS unknown
            = {/TechUnits/ExampleFunctionchart};
- END_LINK;
-
- LINK
-     OF_ASSOCIATION tasklist;
-     PARENT taskparent : CLASS unknown
-           = /TechUnits/ExampleFunctionchart;
-     CHILDREN taskchild : CLASS unknown
-           = {/TechUnits/ExampleFunctionchart.intask};
  END_LINK;
 
  LINK
@@ -224,25 +208,17 @@
  LINK
      OF_ASSOCIATION serverToInterfaces;
      PARENT server : CLASS unknown
-           = /TechUnits/UAServer;
+           = /TechUnits/Server;
      CHILDREN interfaces : CLASS unknown
-           = {/TechUnits/UAServer/ExampleInterface};
- END_LINK;
-
- LINK
-     OF_ASSOCIATION AssocComTaskList;
-     PARENT RootComTask : CLASS unknown
-           = /communication/RootComTask;
-     CHILDREN comtaskchild : CLASS unknown
-           = {/TechUnits/UAServer};
+           = {/TechUnits/Server/Interface};
  END_LINK;
 
  LINK
      OF_ASSOCIATION serverToInterfaces;
      PARENT interfaces : CLASS unknown
-           = /TechUnits/UAServer/ExampleInterface;
+           = /TechUnits/Server/Interface;
      CHILDREN server : CLASS unknown
-           = {/TechUnits/UAServer};
+           = {/TechUnits/Server};
  END_LINK;
 
  INSTANCE  /TechUnits/ExampleFunctionchart/connection1 :
@@ -337,5 +313,5 @@
  END_LIBRARY;
 
  LIBRARY
-    /acplt/opcuaExample
+    /acplt/demo
  END_LIBRARY;

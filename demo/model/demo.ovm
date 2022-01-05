@@ -2,18 +2,18 @@
 #include "fb.ovm"
 #include "opcua.ovm"
 
-LIBRARY opcuaExample
+LIBRARY demo
 	VERSION   = "V0.1 (05-01-2022)";
 	AUTHOR    = "Torben Miny, Julian Grothoff";
 	COPYRIGHT = "PLT";
-	COMMENT   = "Demo library to implement an custom OPCUA interface.";
+	COMMENT   = "Demo library to implement a custom OPCUA interface.";
 	
 	/**
-	*	Documentation of customInterface. 
+	*	Documentation of demoInterface. 
 	*/
-	CLASS customInterface : CLASS opcua/interface
+	CLASS interface : CLASS opcua/interface
     	IS_INSTANTIABLE;
-    	COMMENT = "OPCUA interface for the demoLib.";
+    	COMMENT = "OPCUA interface with a transformation for fb_functionchart for the demo library.";
     	OPERATIONS
 			startup         : C_FUNCTION <OV_FNC_STARTUP>;
 			shutdown        : C_FUNCTION <OV_FNC_SHUTDOWN>;

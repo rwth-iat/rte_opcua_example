@@ -4,7 +4,8 @@ project(rte_opcua_example C)
 
 # Disable default build of unrequired libraries
 SET(BUILD_OV_LIBRARY_cshmi OFF CACHE BOOL "")
-SET(BUILD_OV_LIBRARY_ssc OFF CACHE BOOL "")
+SET(BUILD_OV_LIBRARY_cshmi OFF CACHE BOOL "")
+SET(BUILD_OV_LIBRARY_UDPbind OFF CACHE BOOL "")
 
 # Include ov core
 add_subdirectory(rte)
@@ -15,7 +16,6 @@ include(${RTE_CMAKE_DIR}/ov_functions.cmake)
 include(${RTE_CMAKE_DIR}/ov_definitions.cmake)
 
 # Include libraries of this project
-# Example:
-add_subdirectory(opcuaExample)
+add_subdirectory(demo)
 
 ov_finish_project()

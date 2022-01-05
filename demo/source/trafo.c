@@ -1,21 +1,26 @@
 /*
- * demoTrafo.c
+ * trafo.c
  *
- *  Created on: 06.12.2016
+ *  Created on: 05.01.2022
  *      Author: Torben Deppe, Julian Grothoff
  *
- *  Collects functions that are necessary to transform ov object to ua nodes via UA_Nodestore as custom interface.
+ *  Collects functions that are necessary to transform ov object to ua nodes via UA_Nodestore as a custom interface.
  */
 
 #ifndef OV_COMPILE_LIBRARY_opcua
 #define OV_COMPILE_LIBRARY_opcua
 #endif
 
-#include "demoTrafo.h"
+#include "trafo.h"
+#include "fb_macros.h"
 #include "opcua.h"
 #include "helpers.h"
 #include "nsSwitch.h"
-#include "fb_macros.h"
+
+/*
+ * Static helper functions to create or transform functioncharts and parts.
+ * All used by the getNode nodestore function.
+ */
 
 static void
 addTypeDefinitionReference(const UA_Server * server, UA_Node* node, const UA_NodeId* nodeId, OV_STRING browseName,
@@ -29,18 +34,18 @@ addTypeDefinitionReference(const UA_Server * server, UA_Node* node, const UA_Nod
 		return;
 	// Get the node from nodestore edit and replace
 	UA_ServerConfig* config = UA_Server_getConfig((UA_Server*) server);
-	UA_Nodestore* nsi =  UA_Nodestore_Switch_Interface_get((UA_Nodestore_Switch *)config->nodestore.context);
+	UA_Nodestore* ns =  UA_Nodestore_Switch_Interface_get((UA_Nodestore_Switch *)config->nodestore.context);
 	UA_Node * targetNode = NULL;
-	nsi->getNodeCopy(nsi->context, &typeNodeId.nodeId, &targetNode);
+	ns->getNodeCopy(ns->context, &typeNodeId.nodeId, &targetNode);
 	if(targetNode){
 		UA_ExpandedNodeId targetNodeId;
 		UA_ExpandedNodeId_init(&targetNodeId);
 		UA_NodeId_copy(nodeId, &targetNodeId.nodeId);
 		if(opcua_helpers_addReference(targetNode, UA_REFERENCETYPEINDEX_HASTYPEDEFINITION,
 			targetNodeId, browseName, UA_FALSE) == UA_STATUSCODE_GOOD){
-			nsi->replaceNode(nsi->context, targetNode);
+			ns->replaceNode(ns->context, targetNode);
 		}else{
-			nsi->deleteNode(nsi->context, targetNode);
+			ns->deleteNode(ns->context, targetNode);
 		}
 		UA_ExpandedNodeId_clear(&targetNodeId);
 	}
@@ -374,7 +379,7 @@ transformMethodArguments(const UA_Server * server,
 			case OV_VT_ANY:
 				((UA_Argument*)value->data)[count].dataType = UA_TYPES[UA_TYPES_VARIANT].typeId;
 				((UA_Argument*)value->data)[count].valueRank = UA_VALUERANK_SCALAR_OR_ONE_DIMENSION;
-				//((UA_Argument*)value->data)[count].arrayDimensionsSize = ; //TODO get from tmpPart.pvalue
+				//((UA_Argument*)value->data)[count].arrayDimensionsSize = ; // get from tmpPart.pvalue
 				//((UA_Argument*)value->data)[count].arrayDimensions = UA_UInt32_new();
 				//((UA_Argument*)value->data)[count].arrayDimensions[0] = tmpPart.elemunion.pvar->v_veclen;
 				break;
@@ -422,7 +427,6 @@ transformMethodArguments(const UA_Server * server,
 	return (UA_Node*)node;
 }
 
-//TODO add other data types for arguments
 static UA_StatusCode
 methodCallback(UA_Server *server, const UA_NodeId *sessionId,
                      void *sessionContext, const UA_NodeId *methodId,
@@ -535,35 +539,18 @@ createOperationsFolder(const UA_Server * server,
 	return node;
 }
 
-static void demoTrafo_deleteNodestore(void *context){
-}
 
-static void demoTrafo_deleteNode(void * context, UA_Node *node){
-	if (node){
-		UA_Node_clear(node);
-	}
-	UA_free(node);
-}
-
-static void demoTrafo_releaseNode(void *context, const UA_Node *node){
-	demoTrafo_deleteNode(context, (UA_Node*)node);
-}
-
-static void demoTrafo_iterate(void *context, UA_NodestoreVisitor visitor, void* visitorHandle){
-}
-
-static UA_Node * demoTrafo_newNode(void * context, UA_NodeClass nodeClass){
-    return NULL;
-}
-
-static const UA_Node * demoTrafo_getNode(void * context, const UA_NodeId *nodeId){
+/*
+ * Nodestore API functions
+ */
+static const UA_Node * getNode(void * context, const UA_NodeId *nodeId){
 	UA_Node * 						node = NULL;
 	OV_INSTPTR_ov_object			pobj = NULL;
-	OV_INSTPTR_opcuaExample_customInterface 	pinterface = Ov_StaticPtrCast(opcuaExample_customInterface, context);
+	OV_INSTPTR_demo_interface 		pinterface = Ov_StaticPtrCast(demo_interface, context);
 	OV_INSTPTR_opcua_server 		server = (pinterface) ? Ov_GetParent(opcua_serverToInterfaces, pinterface) : NULL;
 	OPCUA_PTR_UA_Server 			uaServer = (server) ? server->v_server : NULL;
 
-	// Check path for virtual node //TODO move to own function
+	// Check path for virtual node
 	if(nodeId->identifierType == UA_NODEIDTYPE_STRING){
 		OV_STRING path = NULL;
 		OV_UINT length = 0;
@@ -622,49 +609,97 @@ static const UA_Node * demoTrafo_getNode(void * context, const UA_NodeId *nodeId
 	return node;
 }
 
-static UA_StatusCode demoTrafo_getNodeCopy(void *context, const UA_NodeId *nodeId, UA_Node ** nodeOut){
-	UA_Node* node = (UA_Node*) demoTrafo_getNode(context, nodeId);
+static void releaseNode(void *context, const UA_Node *node){
+	// All our nodes are only constructed temporary on access of the nodestore.
+	// So we can safely delete them, if they aren't used anymore (after getNode was called).
+	if (node){
+		UA_Node_clear((UA_Node *)node);
+		UA_free((UA_Node *)node);
+	}
+}
+
+static UA_StatusCode getNodeCopy(void *context, const UA_NodeId *nodeId, UA_Node ** nodeOut){
+	UA_Node* node = (UA_Node*) getNode(context, nodeId);
 	if(node == NULL)
 		return UA_STATUSCODE_BADNODEIDUNKNOWN;
+	//No need to copy the node, as they are only temporary constructed
 	*nodeOut = node;
 	return UA_STATUSCODE_GOOD;
 }
 
-static UA_StatusCode demoTrafo_removeNode(void *context, const UA_NodeId *nodeId){
+static UA_StatusCode replaceNode(void *context, UA_Node *node){
 	return UA_STATUSCODE_BADNOTIMPLEMENTED;
 }
 
-static UA_StatusCode demoTrafo_insertNode(void *context, UA_Node *node, UA_NodeId *parrentNode){
+static UA_StatusCode removeNode(void *context, const UA_NodeId *nodeId){
 	return UA_STATUSCODE_BADNOTIMPLEMENTED;
 }
 
-static UA_StatusCode demoTrafo_replaceNode(void *context, UA_Node *node){
+static UA_Node * newNode(void * context, UA_NodeClass nodeClass){
+    return NULL;
+}
+
+static UA_StatusCode insertNode(void *context, UA_Node *node, UA_NodeId *parrentNode){
 	return UA_STATUSCODE_BADNOTIMPLEMENTED;
 }
 
+static void deleteNode(void * context, UA_Node *node){
+}
+
+static void iterate(void *context, UA_NodestoreVisitor visitor, void* visitorHandle){
+}
+
+static void clear(void *context){
+}
+
+/*
+ * Lifecycle of the trafo as nodestore (interface) itself 
+ */
 UA_Nodestore*
-demoTrafo_new(OV_INSTPTR_opcuaExample_customInterface context) {
-	UA_Nodestore* nsi = (UA_Nodestore*)UA_malloc(sizeof(UA_Nodestore));
-	if(nsi == NULL)
+trafo_new(OV_INSTPTR_demo_interface context) {
+	// Allocate memory for the interface to the nodestore
+	UA_Nodestore* ns = (UA_Nodestore*)UA_malloc(sizeof(UA_Nodestore));
+	if(ns == NULL)
 		return NULL;
-    nsi->context =        	context;
-    nsi->clear =  			demoTrafo_deleteNodestore;
-    nsi->newNode =       	demoTrafo_newNode;
-    nsi->deleteNode =    	demoTrafo_deleteNode;
-    nsi->insertNode =       demoTrafo_insertNode;
-    nsi->getNode =          demoTrafo_getNode;
-    nsi->getNodeCopy =      demoTrafo_getNodeCopy;
-    nsi->replaceNode =      demoTrafo_replaceNode;
-    nsi->removeNode =       demoTrafo_removeNode;
-    nsi->iterate =          demoTrafo_iterate;
-    nsi->releaseNode =      demoTrafo_releaseNode;
-	// Not needed, already handled by the nsSwitch
-	nsi->getReferenceTypeId = NULL;
-    return nsi;
+
+	// The context holds a pointer to the demo_interface itselft, to be used inside all other function
+	// The server can be accessed via opcua_serverToInterfaces association
+    ns->context = 		context;
+
+	// Get a immutable node, and release it if not used anymor
+	// This is the main function, that needs to be implemented for unidirectional transformations
+	// from OV to OPC UA (without OPC UA nodemanagement services and back transformation)
+    ns->getNode =		getNode;
+    ns->releaseNode =	releaseNode;
+	// Needed to change OV values, e.g. to write variable values
+	// The UA_Server obtaines a copy, changes it and calls replaceNode
+	// (c.f. define in open62541 UA_ENABLE_IMMUTABLE_NODES) 
+    ns->getNodeCopy =	getNodeCopy;
+    ns->replaceNode = 	replaceNode;
+    
+	// Remove an existing node
+	// needed if nodemanagement delete service from OPC UA should be supported
+	ns->removeNode =	removeNode;
+
+	// Create a new node and insert it to the nodestore,
+	// needed if nodemanagement add service from OPC UA should be supported
+    ns->newNode =   	newNode;
+    ns->insertNode =  	insertNode;
+    ns->deleteNode =	deleteNode;
+    
+	// Function to iterate over all nodes (e.g. to backup the nodestore state)
+	// Currently not used by the UA_Server
+	ns->iterate =     	iterate;
+	// Delete all members of the nodestore
+    ns->clear =			clear;
+	
+	// Not needed, handled by the nsSwitch in a central manner
+	ns->getReferenceTypeId = NULL; 	
+    return ns;
 }
 
 void
-demoTrafo_delete(UA_Nodestore * nodestoreInterface){
-	nodestoreInterface->context = NULL;
-	UA_free(nodestoreInterface);
+trafo_delete(UA_Nodestore *nodestore){
+	nodestore->context = NULL;
+	UA_free(nodestore);
 }
