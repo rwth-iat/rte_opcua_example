@@ -1,0 +1,341 @@
+/************************************************************
+* Sicherung der Datenbasis
+* Erstellt: 2022-01-05 18:05:47
+* 
+* HOST   : LOCALHOST:7509
+* SERVER : MANAGER
+************************************************************/
+
+ INSTANCE  /TechUnits/ExampleFunctionchart :
+    CLASS /acplt/fb/functionchart;
+    VARIABLE_VALUES
+      iexreq : INPUT BOOL = TRUE;
+      eexreq : OUTPUT BOOL = FALSE;
+      maxcalctime : INPUT TIME_SPAN = 0.000000;
+      methcount : OUTPUT UINT = 186;
+      actimode : INPUT INT = 1;
+      proctime : INPUT TIME = 2022-01-05 18:02:41.382359;
+      cyctime : INPUT TIME_SPAN = 0.000000;
+      ErrState : OUTPUT INT = 0;
+      calctime : OUTPUT TIME_SPAN = 0.000020;
+      Xpos : INPUT INT = 0;
+      Ypos : INPUT INT = 0;
+      idH : INPUT UINT = 0;
+      idL : INPUT UINT = 633;
+    END_VARIABLE_VALUES;
+ END_INSTANCE;
+
+ INSTANCE  /TechUnits/ExampleFunctionchart.intask :
+    CLASS /acplt/fb/task;
+    VARIABLE_VALUES
+      actimode : INPUT INT = 1;
+      proctime : INPUT TIME = 2022-01-05 18:05:47.251198;
+      cyctime : INPUT TIME_SPAN = 0.000000;
+      ErrState : OUTPUT INT = 0;
+      calctime : OUTPUT TIME_SPAN = 0.000002;
+      Xpos : INPUT INT = 0;
+      Ypos : INPUT INT = 0;
+      idH : INPUT UINT = 0;
+      idL : INPUT UINT = 634;
+    END_VARIABLE_VALUES;
+ END_INSTANCE;
+
+ INSTANCE  /TechUnits/ExampleFunctionchart/In1Bool :
+    CLASS /acplt/fb/boolport;
+    VARIABLE_VALUES
+      value : INPUT BOOL = FALSE;
+      flags : INPUT UINT = 256;
+      unit : INPUT STRING = "";
+      comment : INPUT STRING = "First input connected to Out1Bool";
+      idH : INPUT UINT = 0;
+      idL : INPUT UINT = 635;
+    END_VARIABLE_VALUES;
+ END_INSTANCE;
+
+ INSTANCE  /TechUnits/ExampleFunctionchart/In2Int :
+    CLASS /acplt/fb/intport;
+    VARIABLE_VALUES
+      value : INPUT INT = 0;
+      flags : INPUT UINT = 256;
+      unit : INPUT STRING = "";
+      comment : INPUT STRING = "Second input connected to Out2Int";
+      idH : INPUT UINT = 0;
+      idL : INPUT UINT = 636;
+    END_VARIABLE_VALUES;
+ END_INSTANCE;
+
+ INSTANCE  /TechUnits/ExampleFunctionchart/In3String :
+    CLASS /acplt/fb/stringport;
+    VARIABLE_VALUES
+      value : INPUT STRING = "";
+      flags : INPUT UINT = 256;
+      unit : INPUT STRING = "";
+      comment : INPUT STRING = "Third input connected to Out3String";
+      idH : INPUT UINT = 0;
+      idL : INPUT UINT = 637;
+    END_VARIABLE_VALUES;
+ END_INSTANCE;
+
+ INSTANCE  /TechUnits/ExampleFunctionchart/Out1Bool :
+    CLASS /acplt/fb/boolport;
+    VARIABLE_VALUES
+      value : INPUT BOOL = FALSE;
+      flags : INPUT UINT = 16384;
+      unit : INPUT STRING = "";
+      comment : INPUT STRING = "First output filled from In1Bool";
+      idH : INPUT UINT = 0;
+      idL : INPUT UINT = 638;
+    END_VARIABLE_VALUES;
+ END_INSTANCE;
+
+ INSTANCE  /TechUnits/ExampleFunctionchart/Out2Int :
+    CLASS /acplt/fb/intport;
+    VARIABLE_VALUES
+      value : INPUT INT = 0;
+      flags : INPUT UINT = 16384;
+      unit : INPUT STRING = "";
+      comment : INPUT STRING = "Second output filled from In2Int";
+      idH : INPUT UINT = 0;
+      idL : INPUT UINT = 639;
+    END_VARIABLE_VALUES;
+ END_INSTANCE;
+
+ INSTANCE  /TechUnits/ExampleFunctionchart/Out3String :
+    CLASS /acplt/fb/stringport;
+    VARIABLE_VALUES
+      value : INPUT STRING = "";
+      flags : INPUT UINT = 16384;
+      unit : INPUT STRING = "";
+      comment : INPUT STRING = "Third input filled from In3String";
+      idH : INPUT UINT = 0;
+      idL : INPUT UINT = 640;
+    END_VARIABLE_VALUES;
+ END_INSTANCE;
+
+ INSTANCE  /TechUnits/UAServer :
+    CLASS /acplt/opcua/server;
+    VARIABLE_VALUES
+      run : INPUT BOOL = FALSE;
+      isRunning : OUTPUT BOOL = FALSE;
+      reset : INPUT BOOL = FALSE;
+      error : OUTPUT BOOL = FALSE;
+      errorText : OUTPUT STRING = "";
+      applicationURI : INPUT STRING = "acplt.org/";
+      applicationName : INPUT STRING = "";
+      port : INPUT UINT = 4840;
+      actimode : INPUT INT = 1;
+      cycInterval : INPUT INT = 5;
+      NextExecTime : OUTPUT TIME = 2022-01-05 18:05:47.562617;
+      idH : INPUT UINT = 0;
+      idL : INPUT UINT = 641;
+    END_VARIABLE_VALUES;
+ END_INSTANCE;
+
+ INSTANCE  /TechUnits/UAServer/ExampleInterface :
+    CLASS /acplt/opcuaExample/customInterface;
+    VARIABLE_VALUES
+      entryPath : INPUT STRING = "/";
+      useOvTrafo : INPUT BOOL = TRUE;
+      idH : INPUT UINT = 0;
+      idL : INPUT UINT = 642;
+    END_VARIABLE_VALUES;
+ END_INSTANCE;
+
+ LINK
+     OF_ASSOCIATION variables;
+     PARENT funchart : CLASS unknown
+           = /TechUnits/ExampleFunctionchart;
+     CHILDREN ports : CLASS unknown
+           = {/TechUnits/ExampleFunctionchart/In1Bool , /TechUnits/ExampleFunctionchart/In2Int , /TechUnits/ExampleFunctionchart/In3String , /TechUnits/ExampleFunctionchart/Out1Bool , /TechUnits/ExampleFunctionchart/Out2Int , /TechUnits/ExampleFunctionchart/Out3String};
+ END_LINK;
+
+ LINK
+     OF_ASSOCIATION tasklist;
+     PARENT taskparent : CLASS unknown
+           = /TechUnits/ExampleFunctionchart;
+     CHILDREN taskchild : CLASS unknown
+           = {/TechUnits/ExampleFunctionchart.intask};
+ END_LINK;
+
+ LINK
+     OF_ASSOCIATION tasklist;
+     PARENT taskparent : CLASS unknown
+           = /Tasks/UrTask;
+     CHILDREN taskchild : CLASS unknown
+           = {/TechUnits/ExampleFunctionchart};
+ END_LINK;
+
+ LINK
+     OF_ASSOCIATION tasklist;
+     PARENT taskparent : CLASS unknown
+           = /TechUnits/ExampleFunctionchart;
+     CHILDREN taskchild : CLASS unknown
+           = {/TechUnits/ExampleFunctionchart.intask};
+ END_LINK;
+
+ LINK
+     OF_ASSOCIATION variables;
+     PARENT funchart : CLASS unknown
+           = /TechUnits/ExampleFunctionchart;
+     CHILDREN ports : CLASS unknown
+           = {/TechUnits/ExampleFunctionchart/In1Bool};
+ END_LINK;
+
+ LINK
+     OF_ASSOCIATION variables;
+     PARENT funchart : CLASS unknown
+           = /TechUnits/ExampleFunctionchart;
+     CHILDREN ports : CLASS unknown
+           = {/TechUnits/ExampleFunctionchart/In2Int};
+ END_LINK;
+
+ LINK
+     OF_ASSOCIATION variables;
+     PARENT funchart : CLASS unknown
+           = /TechUnits/ExampleFunctionchart;
+     CHILDREN ports : CLASS unknown
+           = {/TechUnits/ExampleFunctionchart/In3String};
+ END_LINK;
+
+ LINK
+     OF_ASSOCIATION variables;
+     PARENT funchart : CLASS unknown
+           = /TechUnits/ExampleFunctionchart;
+     CHILDREN ports : CLASS unknown
+           = {/TechUnits/ExampleFunctionchart/Out1Bool};
+ END_LINK;
+
+ LINK
+     OF_ASSOCIATION variables;
+     PARENT funchart : CLASS unknown
+           = /TechUnits/ExampleFunctionchart;
+     CHILDREN ports : CLASS unknown
+           = {/TechUnits/ExampleFunctionchart/Out2Int};
+ END_LINK;
+
+ LINK
+     OF_ASSOCIATION variables;
+     PARENT funchart : CLASS unknown
+           = /TechUnits/ExampleFunctionchart;
+     CHILDREN ports : CLASS unknown
+           = {/TechUnits/ExampleFunctionchart/Out3String};
+ END_LINK;
+
+ LINK
+     OF_ASSOCIATION serverToInterfaces;
+     PARENT server : CLASS unknown
+           = /TechUnits/UAServer;
+     CHILDREN interfaces : CLASS unknown
+           = {/TechUnits/UAServer/ExampleInterface};
+ END_LINK;
+
+ LINK
+     OF_ASSOCIATION AssocComTaskList;
+     PARENT RootComTask : CLASS unknown
+           = /communication/RootComTask;
+     CHILDREN comtaskchild : CLASS unknown
+           = {/TechUnits/UAServer};
+ END_LINK;
+
+ LINK
+     OF_ASSOCIATION serverToInterfaces;
+     PARENT interfaces : CLASS unknown
+           = /TechUnits/UAServer/ExampleInterface;
+     CHILDREN server : CLASS unknown
+           = {/TechUnits/UAServer};
+ END_LINK;
+
+ INSTANCE  /TechUnits/ExampleFunctionchart/connection1 :
+    CLASS /acplt/fb/connection;
+    VARIABLE_VALUES
+      on : INPUT BOOL = TRUE;
+      sourceport : INPUT STRING = "value";
+      targetport : INPUT STRING = "value";
+      sourcetrig : INPUT BOOL = FALSE;
+      visuallayout : INPUT STRING = "";
+      idH : INPUT UINT = 0;
+      idL : INPUT UINT = 643;
+    END_VARIABLE_VALUES;
+ END_INSTANCE;
+
+ LINK
+     OF_ASSOCIATION inputconnections;
+     PARENT targetfb : CLASS unknown
+           = /TechUnits/ExampleFunctionchart/Out1Bool;
+     CHILDREN inputcon : CLASS connection
+           = {/TechUnits/ExampleFunctionchart/connection1};
+ END_LINK;
+
+ LINK
+     OF_ASSOCIATION outputconnections;
+     PARENT sourcefb : CLASS unknown
+           = /TechUnits/ExampleFunctionchart/In1Bool;
+     CHILDREN outputcon : CLASS connection
+           = {/TechUnits/ExampleFunctionchart/connection1};
+ END_LINK;
+
+ INSTANCE  /TechUnits/ExampleFunctionchart/connection2 :
+    CLASS /acplt/fb/connection;
+    VARIABLE_VALUES
+      on : INPUT BOOL = TRUE;
+      sourceport : INPUT STRING = "value";
+      targetport : INPUT STRING = "value";
+      sourcetrig : INPUT BOOL = FALSE;
+      visuallayout : INPUT STRING = "";
+      idH : INPUT UINT = 0;
+      idL : INPUT UINT = 644;
+    END_VARIABLE_VALUES;
+ END_INSTANCE;
+
+ LINK
+     OF_ASSOCIATION inputconnections;
+     PARENT targetfb : CLASS unknown
+           = /TechUnits/ExampleFunctionchart/Out2Int;
+     CHILDREN inputcon : CLASS connection
+           = {/TechUnits/ExampleFunctionchart/connection2};
+ END_LINK;
+
+ LINK
+     OF_ASSOCIATION outputconnections;
+     PARENT sourcefb : CLASS unknown
+           = /TechUnits/ExampleFunctionchart/In2Int;
+     CHILDREN outputcon : CLASS connection
+           = {/TechUnits/ExampleFunctionchart/connection2};
+ END_LINK;
+
+ INSTANCE  /TechUnits/ExampleFunctionchart/connection3 :
+    CLASS /acplt/fb/connection;
+    VARIABLE_VALUES
+      on : INPUT BOOL = TRUE;
+      sourceport : INPUT STRING = "value";
+      targetport : INPUT STRING = "value";
+      sourcetrig : INPUT BOOL = FALSE;
+      visuallayout : INPUT STRING = "";
+      idH : INPUT UINT = 0;
+      idL : INPUT UINT = 645;
+    END_VARIABLE_VALUES;
+ END_INSTANCE;
+
+ LINK
+     OF_ASSOCIATION inputconnections;
+     PARENT targetfb : CLASS unknown
+           = /TechUnits/ExampleFunctionchart/Out3String;
+     CHILDREN inputcon : CLASS connection
+           = {/TechUnits/ExampleFunctionchart/connection3};
+ END_LINK;
+
+ LINK
+     OF_ASSOCIATION outputconnections;
+     PARENT sourcefb : CLASS unknown
+           = /TechUnits/ExampleFunctionchart/In3String;
+     CHILDREN outputcon : CLASS connection
+           = {/TechUnits/ExampleFunctionchart/connection3};
+ END_LINK;
+
+ LIBRARY
+    /acplt/opcua
+ END_LIBRARY;
+
+ LIBRARY
+    /acplt/opcuaExample
+ END_LIBRARY;

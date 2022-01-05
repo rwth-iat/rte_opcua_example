@@ -44,20 +44,10 @@ OV_DLLFNCEXPORT void opcuaExample_customInterface_shutdown(
 }
 
 OV_DLLFNCEXPORT OV_BOOL opcuaExample_customInterface_checkNode(
-		OV_INSTPTR_opcua_interface pobj, OV_INSTPTR_ov_object pNode,
-		OV_STRING virtualNodePath, void *context) {
-	//OV_INSTPTR_opcuaExample_customInterface pinst = Ov_StaticPtrCast(opcuaExample_customInterface, pobj);
+		OV_INSTPTR_opcua_interface pInterface, OV_INSTPTR_ov_object pObj,
+		OV_STRING virtualNodePath) {
 	// Check if custom interface trafo should be used
-	if (FALSE) {
-		return TRUE;
-	}
-	return FALSE;
-}
-
-OV_DLLFNCEXPORT OV_BOOL opcuaExample_customInterface_checkReference(
-		OV_INSTPTR_opcua_interface pobj, OV_UINT applicationIndex,
-		OV_INSTPTR_ov_object pNode, UA_AddReferencesItem * parentRef) {
-	if (FALSE){
+	if (Ov_CanCastTo(fb_functionchart, pObj)) {
 		return TRUE;
 	}
 	return FALSE;
