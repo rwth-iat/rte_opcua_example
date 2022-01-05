@@ -1,0 +1,24 @@
+#include "ov.ovm"
+#include "opcua.ovm"
+
+LIBRARY opcuaExample
+	VERSION   = "V0.1 (05-01-2022)";
+	AUTHOR    = "Torben Miny, Julian Grothoff";
+	COPYRIGHT = "PLT";
+	COMMENT   = "Demo library to implement an custom OPCUA interface.";
+	
+	/**
+	*	Documentation of customInterface. 
+	*/
+	CLASS customInterface : CLASS opcua/interface
+    	IS_INSTANTIABLE;
+    	COMMENT = "OPCUA interface for the demoLib.";
+    	OPERATIONS
+			startup         : C_FUNCTION <OV_FNC_STARTUP>;
+			shutdown        : C_FUNCTION <OV_FNC_SHUTDOWN>;
+        	//Only necessary for advanced transformations. For example: add a reference to a specific node after loading of trafo and types.
+        	//load      :    C_FUNCTION <OPCUA_FNC_LOADINFORMATIONMODEL>;
+        END_OPERATIONS;
+	END_CLASS;
+	
+END_LIBRARY;

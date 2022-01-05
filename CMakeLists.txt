@@ -3,9 +3,7 @@ cmake_minimum_required(VERSION 3.13)
 project(rte_opcua_example C)
 
 # Disable default build of unrequired libraries
-SET(BUILD_OV_LIBRARY_UDPbind OFF CACHE BOOL "")
-SET(BUILD_OV_LIBRARY_SSChelper OFF CACHE BOOL "")
-
+SET(BUILD_OV_LIBRARY_cshmi OFF CACHE BOOL "")
 
 # Include ov core
 add_subdirectory(rte)
