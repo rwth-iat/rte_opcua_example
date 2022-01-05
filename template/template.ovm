@@ -1,0 +1,25 @@
+#include "ov.ovm"
+#include "opcua.ovm"
+
+LIBRARY demo
+	VERSION   = "V0.1 (05-01-2022)";
+	AUTHOR    = "Torben Miny, Julian Grothoff";
+	COPYRIGHT = "PLT";
+	COMMENT   = "Template library to implement a custom OPCUA interface.";
+	
+	/**
+	*	Documentation of demoInterface. 
+	*/
+	CLASS interface : CLASS opcua/interface
+    	IS_INSTANTIABLE;
+    	COMMENT = "OPCUA interface with a transformation for fb_functionchart for the demo library.";
+    	OPERATIONS
+			startup         : C_FUNCTION <OV_FNC_STARTUP>;
+			shutdown        : C_FUNCTION <OV_FNC_SHUTDOWN>;
+			load            : C_FUNCTION <OPCUA_FNC_LOADINFORMATIONMODEL>;
+            checkNode       : C_FUNCTION <OPCUA_FNC_CHECKNODE>;
+            checkReference  : C_FUNCTION <OPCUA_FNC_CHECKREFERENCE>;
+        END_OPERATIONS;
+	END_CLASS;
+	
+END_LIBRARY;
