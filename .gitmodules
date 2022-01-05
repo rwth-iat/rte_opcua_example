@@ -1,0 +1,4 @@
+[submodule "rte"]
+	path = rte
+	url = ../rte.git
+	branch = uaUpdate
