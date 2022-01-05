@@ -1,4 +1,4 @@
 [submodule "rte"]
 	path = rte
-	url = ../rte.git
+	url = https://github.com/acplt/rte
 	branch = uaUpdate
