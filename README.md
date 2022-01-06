@@ -3,7 +3,7 @@
 
 This project shows how to write a specialiced interface class for the [opcua](https://github.com/acplt/rte/tree/master/syslibs/opcua) library to utilize custom transformations from OV to OPC UA or to use OPC UA Companion Specifications.
 
-## Demo
+## Simple Demo "interface"
 
 The repository contains a [demo](demo) ov library, a [demo fbd file](doc/Demo.fbd), some [screenshots](doc) and some boilerplate [template](template) files.
 The example fbd for the demo contains an OPC UA server from `opcua` ov library, a custom interface from this demo library and an example functionchart from the fb library, that is show in the following screenshot.
@@ -18,7 +18,9 @@ The idea of the demo library is to change the generic transformation of fb funct
 ![UaExpert Screenshot](doc/uaexpert-screenshot-adresspace-functionchart-without-trafo.png "UaExpert screenshot showing the adress space of the generic transformation of a functionchart")
 ![UaExpert Screenshot](doc/uaexpert-screenshot-adresspace-functionchart.png "UaExpert screenshot showing the adress space of the demo transformation of a functionchart")
 
-The custom transformation in the demo library, changes the OPC UA representation of every functioncharts generically by:
+The custom `interface` class in the demo library, which is derived from the abstract interface in the opcua library, contains a transformation, which is defined in `trafo.c`.
+Transformations are encapsulated in custom OPC UA nodestores.
+The demo transformation changes the OPC UA representation of every functioncharts generically by:
 
 * removing some variables except for `actimode`
 * creating two virtual (=only in OPC UA seen) folders: `STATUS` and `OPERATIONS`
@@ -69,3 +71,11 @@ View the ov_runtimeserver from OPC UA Client:
   * stop the OPC UA server from a KS client: set `/TechUnits/Server.run` to false
   * unlink `/TechUnits/Server/Interface.server` from `/TechUnits/Server.interfaces`
   * start the OPC UA server again: set `/TechUnits/Server.run` to true
+
+## Demo with nodeset and data types
+
+The demo library contains a second example with a `interfaceTypes` class and corresponding `trafoTypes` transformation functions, as well as a very simple generated `nodeset` file with two custom datatypes:
+
+* Actimode: an enumeration with values ON/OFF that should represent the actimode of fb tasks
+* Identifier: a struct that consists off two integers idH and idL (ids of OV objects).
+ 

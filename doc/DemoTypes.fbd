@@ -1,0 +1,126 @@
+/************************************************************
+* Sicherung der Datenbasis
+* Erstellt: 2022-01-06 20:37:43
+* 
+* HOST   : LOCALHOST:7509
+* SERVER : MANAGER
+************************************************************/
+
+ INSTANCE  /TechUnits/Functionchart :
+    CLASS /acplt/fb/functionchart;
+    VARIABLE_VALUES
+      iexreq : INPUT BOOL = TRUE;
+      eexreq : OUTPUT BOOL = FALSE;
+      maxcalctime : INPUT TIME_SPAN = 0.000000;
+      methcount : OUTPUT UINT = 0;
+      actimode : INPUT INT = 0;
+      proctime : INPUT TIME = 2022-01-06 20:37:03.300931;
+      cyctime : INPUT TIME_SPAN = 0.000000;
+      ErrState : OUTPUT INT = 0;
+      calctime : OUTPUT TIME_SPAN = 0.000000;
+      Xpos : INPUT INT = 0;
+      Ypos : INPUT INT = 0;
+      idH : INPUT UINT = 0;
+      idL : INPUT UINT = 636;
+    END_VARIABLE_VALUES;
+ END_INSTANCE;
+
+ INSTANCE  /TechUnits/Functionchart.intask :
+    CLASS /acplt/fb/task;
+    VARIABLE_VALUES
+      actimode : INPUT INT = 0;
+      proctime : INPUT TIME = 2022-01-06 20:37:03.300919;
+      cyctime : INPUT TIME_SPAN = 0.000000;
+      ErrState : OUTPUT INT = 0;
+      calctime : OUTPUT TIME_SPAN = 0.000000;
+      Xpos : INPUT INT = 0;
+      Ypos : INPUT INT = 0;
+      idH : INPUT UINT = 0;
+      idL : INPUT UINT = 637;
+    END_VARIABLE_VALUES;
+ END_INSTANCE;
+
+ INSTANCE  /TechUnits/Server :
+    CLASS /acplt/opcua/server;
+    VARIABLE_VALUES
+      run : INPUT BOOL = FALSE;
+      isRunning : OUTPUT BOOL = FALSE;
+      reset : INPUT BOOL = FALSE;
+      error : OUTPUT BOOL = FALSE;
+      errorText : OUTPUT STRING = "";
+      applicationURI : INPUT STRING = "acplt.org/";
+      applicationName : INPUT STRING = "";
+      port : INPUT UINT = 4840;
+      actimode : INPUT INT = 1;
+      cycInterval : INPUT INT = 5;
+      NextExecTime : OUTPUT TIME = 2022-01-06 20:37:43.675281;
+      idH : INPUT UINT = 0;
+      idL : INPUT UINT = 632;
+    END_VARIABLE_VALUES;
+ END_INSTANCE;
+
+ INSTANCE  /TechUnits/Server/InterfaceTypes :
+    CLASS /acplt/demo/interfaceTypes;
+    VARIABLE_VALUES
+      entryPath : INPUT STRING = "/";
+      useOvTrafo : INPUT BOOL = TRUE;
+      idH : INPUT UINT = 0;
+      idL : INPUT UINT = 633;
+    END_VARIABLE_VALUES;
+ END_INSTANCE;
+
+ LINK
+     OF_ASSOCIATION tasklist;
+     PARENT taskparent : CLASS unknown
+           = /TechUnits/Functionchart;
+     CHILDREN taskchild : CLASS unknown
+           = {/TechUnits/Functionchart.intask};
+ END_LINK;
+
+ LINK
+     OF_ASSOCIATION tasklist;
+     PARENT taskparent : CLASS unknown
+           = /Tasks/UrTask;
+     CHILDREN taskchild : CLASS unknown
+           = {/TechUnits/Functionchart};
+ END_LINK;
+
+ LINK
+     OF_ASSOCIATION tasklist;
+     PARENT taskparent : CLASS unknown
+           = /TechUnits/Functionchart;
+     CHILDREN taskchild : CLASS unknown
+           = {/TechUnits/Functionchart.intask};
+ END_LINK;
+
+ LINK
+     OF_ASSOCIATION serverToInterfaces;
+     PARENT server : CLASS unknown
+           = /TechUnits/Server;
+     CHILDREN interfaces : CLASS unknown
+           = {/TechUnits/Server/InterfaceTypes};
+ END_LINK;
+
+ LINK
+     OF_ASSOCIATION AssocComTaskList;
+     PARENT RootComTask : CLASS unknown
+           = /communication/RootComTask;
+     CHILDREN comtaskchild : CLASS unknown
+           = {/TechUnits/Server};
+ END_LINK;
+
+ LINK
+     OF_ASSOCIATION serverToInterfaces;
+     PARENT interfaces : CLASS unknown
+           = /TechUnits/Server/InterfaceTypes;
+     CHILDREN server : CLASS unknown
+           = {/TechUnits/Server};
+ END_LINK;
+
+ LIBRARY
+    /acplt/opcua
+ END_LIBRARY;
+
+ LIBRARY
+    /acplt/demo
+ END_LIBRARY;

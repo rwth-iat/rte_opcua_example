@@ -9,7 +9,7 @@ LIBRARY demo
 	COMMENT   = "Demo library to implement a custom OPCUA interface.";
 	
 	/**
-	*	Documentation of demoInterface. 
+	*	Documentation of interface. 
 	*/
 	CLASS interface : CLASS opcua/interface
     	IS_INSTANTIABLE;
@@ -18,6 +18,20 @@ LIBRARY demo
 			startup         : C_FUNCTION <OV_FNC_STARTUP>;
 			shutdown        : C_FUNCTION <OV_FNC_SHUTDOWN>;
 			checkNode       : C_FUNCTION <OPCUA_FNC_CHECKNODE>;
+        END_OPERATIONS;
+	END_CLASS;
+
+		/**
+	*	Documentation of interfaceTypes. 
+	*/
+	CLASS interfaceTypes : CLASS opcua/interface
+    	IS_INSTANTIABLE;
+    	COMMENT = "OPCUA interface with a transformation for fb_functionchart for the demo library.";
+    	OPERATIONS
+			startup         : C_FUNCTION <OV_FNC_STARTUP>;
+			shutdown        : C_FUNCTION <OV_FNC_SHUTDOWN>;
+			checkNode       : C_FUNCTION <OPCUA_FNC_CHECKNODE>;
+			load            : C_FUNCTION <OPCUA_FNC_LOADINFORMATIONMODEL>;
         END_OPERATIONS;
 	END_CLASS;
 	
