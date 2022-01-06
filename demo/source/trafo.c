@@ -27,7 +27,7 @@ addTypeDefinitionReference(const UA_Server * server, UA_Node* node, const UA_Nod
 		const UA_ExpandedNodeId typeNodeId, OV_STRING typeBrowseName){
 	// hasTypeDefinition reference forward
 	opcua_helpers_addReference(node, UA_REFERENCETYPEINDEX_HASTYPEDEFINITION,
-			typeNodeId, typeBrowseName, UA_TRUE);
+			typeNodeId, typeBrowseName, typeNodeId.nodeId.namespaceIndex, UA_TRUE);
 
 	// hasTypeDefinition reference backward
 	if(server == NULL)
@@ -42,7 +42,7 @@ addTypeDefinitionReference(const UA_Server * server, UA_Node* node, const UA_Nod
 		UA_ExpandedNodeId_init(&targetNodeId);
 		UA_NodeId_copy(nodeId, &targetNodeId.nodeId);
 		if(opcua_helpers_addReference(targetNode, UA_REFERENCETYPEINDEX_HASTYPEDEFINITION,
-			targetNodeId, browseName, UA_FALSE) == UA_STATUSCODE_GOOD){
+			targetNodeId, browseName, targetNodeId.nodeId.namespaceIndex, UA_FALSE) == UA_STATUSCODE_GOOD){
 			ns->replaceNode(ns->context, targetNode);
 		}else{
 			ns->deleteNode(ns->context, targetNode);
@@ -110,7 +110,7 @@ transformGenericObject(
 		UA_Byte parentRefTypIndex = (node->head.nodeClass == UA_NODECLASS_METHOD ?
 			UA_REFERENCETYPEINDEX_HASCOMPONENT : (node->head.nodeClass == UA_NODECLASS_VARIABLE) ?
 				UA_REFERENCETYPEINDEX_HASPROPERTY  : UA_REFERENCETYPEINDEX_ORGANIZES);
-		opcua_helpers_addReference(node, parentRefTypIndex, targetNodeId, parentBrowseName, UA_FALSE);
+		opcua_helpers_addReference(node, parentRefTypIndex, targetNodeId, parentBrowseName, targetNodeId.nodeId.namespaceIndex, UA_FALSE);
 		UA_ExpandedNodeId_clear(&targetNodeId);
 	}
 	// Type definition reference
@@ -139,7 +139,7 @@ transformFunctionChart(
 	UA_NodeId_copy(nodeId, &targetNodeId.nodeId);
 	opcua_helpers_UA_String_append(&targetNodeId.nodeId.identifier.string, "||STATUS");
 	targetNodeId.nodeId.namespaceIndex = OV_OPCUA_DEFAULTNSINDEX;
-	opcua_helpers_addReference(node, UA_REFERENCETYPEINDEX_ORGANIZES, targetNodeId, "STATUS", UA_TRUE);
+	opcua_helpers_addReference(node, UA_REFERENCETYPEINDEX_ORGANIZES, targetNodeId, "STATUS", targetNodeId.nodeId.namespaceIndex, UA_TRUE);
 	UA_ExpandedNodeId_clear(&targetNodeId);
 	
 	// Add OPERATIONS reference
@@ -148,7 +148,7 @@ transformFunctionChart(
 	UA_NodeId_copy(nodeId, &targetNodeId.nodeId);
 	opcua_helpers_UA_String_append(&targetNodeId.nodeId.identifier.string, "||OPERATIONS");
 	targetNodeId.nodeId.namespaceIndex = OV_OPCUA_DEFAULTNSINDEX;
-	opcua_helpers_addReference(node, UA_REFERENCETYPEINDEX_ORGANIZES, targetNodeId, "OPERATIONS", UA_TRUE);
+	opcua_helpers_addReference(node, UA_REFERENCETYPEINDEX_ORGANIZES, targetNodeId, "OPERATIONS", targetNodeId.nodeId.namespaceIndex, UA_TRUE);
 	UA_ExpandedNodeId_clear(&targetNodeId);
 	
 	//Add a variable of the functionchart directly under object
@@ -157,7 +157,7 @@ transformFunctionChart(
 	UA_NodeId_copy(nodeId, &targetNodeId.nodeId);
 	opcua_helpers_UA_String_append(&targetNodeId.nodeId.identifier.string, ".actimode");
 	targetNodeId.nodeId.namespaceIndex = OV_OPCUA_DEFAULTNSINDEX;
-	opcua_helpers_addReference(node, UA_REFERENCETYPEINDEX_ORGANIZES, targetNodeId, "actimode", UA_TRUE);
+	opcua_helpers_addReference(node, UA_REFERENCETYPEINDEX_ORGANIZES, targetNodeId, "actimode", targetNodeId.nodeId.namespaceIndex, UA_TRUE);
 	UA_ExpandedNodeId_clear(&targetNodeId);
 	return node;
 }
@@ -268,7 +268,7 @@ createStatusFolder(const UA_Server * server,
 			ov_string_stack_print(&portPath, "%s||STATUS||%s", parentPath, pport->v_identifier);
 			targetNodeId = UA_EXPANDEDNODEID_STRING_ALLOC(nodeId->namespaceIndex,
 					portPath);
-			opcua_helpers_addReference(node, UA_REFERENCETYPEINDEX_HASPROPERTY, targetNodeId, "STATUS", UA_TRUE);
+			opcua_helpers_addReference(node, UA_REFERENCETYPEINDEX_HASPROPERTY, targetNodeId, "STATUS", targetNodeId.nodeId.namespaceIndex, UA_TRUE);
 			UA_ExpandedNodeId_clear(&targetNodeId);
 		}
 	}
@@ -531,7 +531,7 @@ createOperationsFolder(const UA_Server * server,
 			ov_string_stack_print(&portPath, "%s||OPERATIONS||%s", parentPath, pport->v_identifier);
 			targetNodeId = UA_EXPANDEDNODEID_STRING_ALLOC(nodeId->namespaceIndex,
 					portPath);
-			opcua_helpers_addReference(node, UA_REFERENCETYPEINDEX_HASCOMPONENT, targetNodeId, "OPERATIONS", UA_TRUE);
+			opcua_helpers_addReference(node, UA_REFERENCETYPEINDEX_HASCOMPONENT, targetNodeId, "OPERATIONS", targetNodeId.nodeId.namespaceIndex, UA_TRUE);
 			UA_ExpandedNodeId_clear(&targetNodeId);
 		}
 	}
