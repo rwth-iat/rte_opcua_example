@@ -120,46 +120,29 @@ transformGenericObject(
 	return node;
 }
 
-static UA_Node *
-transformFunctionChart(
-		OV_INSTPTR_fb_functionchart pobj, const UA_Server * server,
-		const UA_NodeId * nodeId){
-	UA_Node * node = transformGenericObject(server,
-			pobj->v_identifier, "My transformed functionchart",
-			UA_NODECLASS_OBJECT, nodeId, UA_NODEID_NULL, NULL,
-			UA_NS0ID_BASEOBJECTTYPE,
-			"BaseObjectType");
-
-	// Add references
-	// Organizes .CMD, STATUS and OPERATIONS
-	
-	// Add STATUS reference as virtual node
-	UA_ExpandedNodeId targetNodeId;
-	UA_ExpandedNodeId_init(&targetNodeId);
-	UA_NodeId_copy(nodeId, &targetNodeId.nodeId);
-	opcua_helpers_UA_String_append(&targetNodeId.nodeId.identifier.string, "||STATUS");
-	targetNodeId.nodeId.namespaceIndex = OV_OPCUA_DEFAULTNSINDEX;
-	opcua_helpers_addReference(node, UA_REFERENCETYPEINDEX_ORGANIZES, targetNodeId, "STATUS", targetNodeId.nodeId.namespaceIndex, UA_TRUE);
-	UA_ExpandedNodeId_clear(&targetNodeId);
-	
-	// Add OPERATIONS reference
-	UA_ExpandedNodeId_clear(&targetNodeId);
-	UA_ExpandedNodeId_init(&targetNodeId);
-	UA_NodeId_copy(nodeId, &targetNodeId.nodeId);
-	opcua_helpers_UA_String_append(&targetNodeId.nodeId.identifier.string, "||OPERATIONS");
-	targetNodeId.nodeId.namespaceIndex = OV_OPCUA_DEFAULTNSINDEX;
-	opcua_helpers_addReference(node, UA_REFERENCETYPEINDEX_ORGANIZES, targetNodeId, "OPERATIONS", targetNodeId.nodeId.namespaceIndex, UA_TRUE);
-	UA_ExpandedNodeId_clear(&targetNodeId);
-	
-	//Add a variable of the functionchart directly under object
-	UA_ExpandedNodeId_clear(&targetNodeId);
-	UA_ExpandedNodeId_init(&targetNodeId);
-	UA_NodeId_copy(nodeId, &targetNodeId.nodeId);
-	opcua_helpers_UA_String_append(&targetNodeId.nodeId.identifier.string, ".actimode");
-	targetNodeId.nodeId.namespaceIndex = OV_OPCUA_DEFAULTNSINDEX;
-	opcua_helpers_addReference(node, UA_REFERENCETYPEINDEX_ORGANIZES, targetNodeId, "actimode", targetNodeId.nodeId.namespaceIndex, UA_TRUE);
-	UA_ExpandedNodeId_clear(&targetNodeId);
-	return node;
+static OV_RESULT
+getPortValue(const UA_NodeId* nodeId, OV_STRING functionchartPath, OV_STRING portName, OV_ANY* portValue, OV_INSTPTR_fb_port* pPort){
+	// Resolve parent node id and check that it is a functionchart
+	UA_NodeId parentNodeId = UA_NODEID_STRING(nodeId->namespaceIndex, functionchartPath);
+	OV_INSTPTR_ov_object pobj = opcua_helpers_resolveNodeIdToOvObject(&parentNodeId);
+	if(pobj != NULL || !Ov_CanCastTo(fb_functionchart, pobj)){
+		if(pPort){
+			OV_INSTPTR_fb_port pvar;
+			Ov_ForEachChild (fb_variables, Ov_StaticPtrCast(fb_functionchart, pobj), pvar)
+			{
+				if (ov_string_compare (pvar->v_identifier, portName) == OV_STRCMP_EQUAL)
+				{
+					*pPort =pvar;
+					break;
+				}
+			}
+		}
+		if(portValue != NULL)
+			return fb_functionchart_getport(Ov_StaticPtrCast(fb_functionchart, pobj), portName, portValue);
+		else
+			return OV_ERR_OK;
+	}
+	return OV_ERR_GENERIC;
 }
 
 static UA_StatusCode
@@ -214,7 +197,7 @@ transformStatusVariable(const UA_Server * server,
 	OV_STRING virtualParentPath = NULL;
 	ov_string_stack_print(&virtualParentPath, "%s||STATUS", parentPath);
 	UA_VariableNode * node = (UA_VariableNode*) transformGenericObject(server,
-			identifier, "Description", //Currently the dget description from port value
+			identifier, NULL, //Description is overwriten with port comment later
 			UA_NODECLASS_VARIABLE, nodeId,
 			UA_NODEID_STRING(nodeId->namespaceIndex, virtualParentPath), "STATUS",
 			UA_NS0ID_PROPERTYTYPE, "PropertyType");
@@ -226,11 +209,12 @@ transformStatusVariable(const UA_Server * server,
 	if(pobj == NULL || !Ov_CanCastTo(fb_functionchart, pobj)){
 		return (UA_Node*)node;
 	}
-	OV_INSTPTR_fb_functionchart pFunctionchart = Ov_StaticPtrCast(fb_functionchart, pobj);
-	OV_ANY value = OV_ANY_INIT;
-	fb_functionchart_getport(pFunctionchart, identifier, &value);
-	node->accessLevel = UA_ACCESSLEVELMASK_READ;
 
+	OV_INSTPTR_fb_port pPort = NULL;
+	OV_ANY value = OV_ANY_INIT;
+	getPortValue(nodeId, parentPath, identifier, &value, &pPort);
+	node->head.description.text = UA_String_fromChars(pPort->v_comment);
+	node->accessLevel = UA_ACCESSLEVELMASK_READ;
 	transformVariableValue(node, &value);
 
 	return (UA_Node*)node;
@@ -268,37 +252,12 @@ createStatusFolder(const UA_Server * server,
 			ov_string_stack_print(&portPath, "%s||STATUS||%s", parentPath, pport->v_identifier);
 			targetNodeId = UA_EXPANDEDNODEID_STRING_ALLOC(nodeId->namespaceIndex,
 					portPath);
-			opcua_helpers_addReference(node, UA_REFERENCETYPEINDEX_HASPROPERTY, targetNodeId, "STATUS", targetNodeId.nodeId.namespaceIndex, UA_TRUE);
+			opcua_helpers_addReference(node, UA_REFERENCETYPEINDEX_HASPROPERTY, targetNodeId, pport->v_identifier, targetNodeId.nodeId.namespaceIndex, UA_TRUE);
 			UA_ExpandedNodeId_clear(&targetNodeId);
 		}
 	}
 	ov_memstack_unlock();
 	return node;
-}
-
-static OV_RESULT
-getPortValue(const UA_NodeId* nodeId, OV_STRING functionchartPath, OV_STRING portName, OV_ANY* portValue, OV_INSTPTR_fb_port* pPort){
-	// Resolve parent node id and check that it is a functionchart
-	UA_NodeId parentNodeId = UA_NODEID_STRING(nodeId->namespaceIndex, functionchartPath);
-	OV_INSTPTR_ov_object pobj = opcua_helpers_resolveNodeIdToOvObject(&parentNodeId);
-	if(pobj != NULL || !Ov_CanCastTo(fb_functionchart, pobj)){
-		if(pPort){
-			OV_INSTPTR_fb_port pvar;
-			Ov_ForEachChild (fb_variables, Ov_StaticPtrCast(fb_functionchart, pobj), pvar)
-			{
-				if (ov_string_compare (pvar->v_identifier, portName) == OV_STRCMP_EQUAL)
-				{
-					*pPort =pvar;
-					break;
-				}
-			}
-		}
-		if(portValue != NULL)
-			return fb_functionchart_getport(Ov_StaticPtrCast(fb_functionchart, pobj), portName, portValue);
-		else
-			return OV_ERR_OK;
-	}
-	return OV_ERR_GENERIC;
 }
 
 static UA_Node *
@@ -531,7 +490,7 @@ createOperationsFolder(const UA_Server * server,
 			ov_string_stack_print(&portPath, "%s||OPERATIONS||%s", parentPath, pport->v_identifier);
 			targetNodeId = UA_EXPANDEDNODEID_STRING_ALLOC(nodeId->namespaceIndex,
 					portPath);
-			opcua_helpers_addReference(node, UA_REFERENCETYPEINDEX_HASCOMPONENT, targetNodeId, "OPERATIONS", targetNodeId.nodeId.namespaceIndex, UA_TRUE);
+			opcua_helpers_addReference(node, UA_REFERENCETYPEINDEX_HASCOMPONENT, targetNodeId, pport->v_identifier, targetNodeId.nodeId.namespaceIndex, UA_TRUE);
 			UA_ExpandedNodeId_clear(&targetNodeId);
 		}
 	}
@@ -539,6 +498,47 @@ createOperationsFolder(const UA_Server * server,
 	return node;
 }
 
+static UA_Node *
+transformFunctionChart(
+		OV_INSTPTR_fb_functionchart pobj, const UA_Server * server,
+		const UA_NodeId * nodeId){
+	UA_Node * node = transformGenericObject(server,
+			pobj->v_identifier, "My transformed functionchart",
+			UA_NODECLASS_OBJECT, nodeId, UA_NODEID_NULL, NULL,
+			UA_NS0ID_BASEOBJECTTYPE,
+			"BaseObjectType");
+
+	// Add references
+	// Organizes .CMD, STATUS and OPERATIONS
+	
+	// Add STATUS reference as virtual node
+	UA_ExpandedNodeId targetNodeId;
+	UA_ExpandedNodeId_init(&targetNodeId);
+	UA_NodeId_copy(nodeId, &targetNodeId.nodeId);
+	opcua_helpers_UA_String_append(&targetNodeId.nodeId.identifier.string, "||STATUS");
+	targetNodeId.nodeId.namespaceIndex = OV_OPCUA_DEFAULTNSINDEX;
+	opcua_helpers_addReference(node, UA_REFERENCETYPEINDEX_ORGANIZES, targetNodeId, "STATUS", targetNodeId.nodeId.namespaceIndex, UA_TRUE);
+	UA_ExpandedNodeId_clear(&targetNodeId);
+	
+	// Add OPERATIONS reference
+	UA_ExpandedNodeId_clear(&targetNodeId);
+	UA_ExpandedNodeId_init(&targetNodeId);
+	UA_NodeId_copy(nodeId, &targetNodeId.nodeId);
+	opcua_helpers_UA_String_append(&targetNodeId.nodeId.identifier.string, "||OPERATIONS");
+	targetNodeId.nodeId.namespaceIndex = OV_OPCUA_DEFAULTNSINDEX;
+	opcua_helpers_addReference(node, UA_REFERENCETYPEINDEX_ORGANIZES, targetNodeId, "OPERATIONS", targetNodeId.nodeId.namespaceIndex, UA_TRUE);
+	UA_ExpandedNodeId_clear(&targetNodeId);
+	
+	//Add a variable of the functionchart directly under object
+	UA_ExpandedNodeId_clear(&targetNodeId);
+	UA_ExpandedNodeId_init(&targetNodeId);
+	UA_NodeId_copy(nodeId, &targetNodeId.nodeId);
+	opcua_helpers_UA_String_append(&targetNodeId.nodeId.identifier.string, ".actimode");
+	targetNodeId.nodeId.namespaceIndex = OV_OPCUA_DEFAULTNSINDEX;
+	opcua_helpers_addReference(node, UA_REFERENCETYPEINDEX_ORGANIZES, targetNodeId, "actimode", targetNodeId.nodeId.namespaceIndex, UA_TRUE);
+	UA_ExpandedNodeId_clear(&targetNodeId);
+	return node;
+}
 
 /*
  * Nodestore API functions
@@ -550,43 +550,45 @@ static const UA_Node * getNode(void * context, const UA_NodeId *nodeId){
 	OV_INSTPTR_opcua_server 		server = (pinterface) ? Ov_GetParent(opcua_serverToInterfaces, pinterface) : NULL;
 	OPCUA_PTR_UA_Server 			uaServer = (server) ? server->v_server : NULL;
 
+	if(nodeId->identifierType != UA_NODEIDTYPE_STRING){
+		return NULL;
+	}
+
 	// Check path for virtual node
-	if(nodeId->identifierType == UA_NODEIDTYPE_STRING){
-		OV_STRING path = NULL;
-		OV_UINT length = 0;
-		opcua_helpers_copyUAStringToOV(nodeId->identifier.string , &path);
-		OV_STRING* pathList = ov_string_split(path, "||", &length);
-		if(length > 1){
-			if(ov_string_compare(pathList[1], "STATUS") == OV_STRCMP_EQUAL){
-				if(length == 2){
-					// pathToFunctionChart||STATUS
-					// Get the name of the functionchart as the parent browsename
-					OV_UINT pathListOVlength = 0;
-					OV_STRING* pathListOV = ov_string_split(pathList[0], "/", &pathListOVlength);
-					node = createStatusFolder(uaServer, nodeId, pathList[0], pathListOV[pathListOVlength-1]);
-					ov_string_freelist(pathListOV);
-				}else if(length == 3){
-					// pathToFunctionChart||STATUS||VariableName
-					node = transformStatusVariable(uaServer, nodeId, pathList[2], pathList[0]);
-				}
-			}
-			if(ov_string_compare(pathList[1], "OPERATIONS") == OV_STRCMP_EQUAL){
-				if(length == 2){
-					OV_UINT pathListOVlength = 0;
-					OV_STRING* pathListOV = ov_string_split(pathList[0], "/", &pathListOVlength);
-					node = createOperationsFolder(uaServer, nodeId, pathList[0], pathListOV[pathListOVlength-1]);
-					ov_string_freelist(pathListOV);
-				}else if(length == 3){
-					node = transformMethod(uaServer, nodeId, pathList[2], pathList[0]);
-				}
-				else if(length == 4){
-					node = transformMethodArguments(uaServer, nodeId, pathList[2], pathList[3], pathList[0]);
-				}
+	OV_STRING path = NULL;
+	OV_UINT length = 0;
+	opcua_helpers_copyUAStringToOV(nodeId->identifier.string , &path);
+	OV_STRING* pathList = ov_string_split(path, "||", &length);
+	if(length > 1){
+		if(ov_string_compare(pathList[1], "STATUS") == OV_STRCMP_EQUAL){
+			if(length == 2){
+				// pathToFunctionChart||STATUS
+				// Get the name of the functionchart as the parent browsename
+				OV_UINT pathListOVlength = 0;
+				OV_STRING* pathListOV = ov_string_split(pathList[0], "/", &pathListOVlength);
+				node = createStatusFolder(uaServer, nodeId, pathList[0], pathListOV[pathListOVlength-1]);
+				ov_string_freelist(pathListOV);
+			}else if(length == 3){
+				// pathToFunctionChart||STATUS||VariableName
+				node = transformStatusVariable(uaServer, nodeId, pathList[2], pathList[0]);
 			}
 		}
-		ov_string_setvalue(&path, NULL);
-		ov_string_freelist(pathList);
+		if(ov_string_compare(pathList[1], "OPERATIONS") == OV_STRCMP_EQUAL){
+			if(length == 2){
+				OV_UINT pathListOVlength = 0;
+				OV_STRING* pathListOV = ov_string_split(pathList[0], "/", &pathListOVlength);
+				node = createOperationsFolder(uaServer, nodeId, pathList[0], pathListOV[pathListOVlength-1]);
+				ov_string_freelist(pathListOV);
+			}else if(length == 3){
+				node = transformMethod(uaServer, nodeId, pathList[2], pathList[0]);
+			}
+			else if(length == 4){
+				node = transformMethodArguments(uaServer, nodeId, pathList[2], pathList[3], pathList[0]);
+			}
+		}
 	}
+	ov_string_setvalue(&path, NULL);
+	ov_string_freelist(pathList);
 
 	// Check for none virtual node
 	if(node == NULL){
@@ -619,12 +621,7 @@ static void releaseNode(void *context, const UA_Node *node){
 }
 
 static UA_StatusCode getNodeCopy(void *context, const UA_NodeId *nodeId, UA_Node ** nodeOut){
-	UA_Node* node = (UA_Node*) getNode(context, nodeId);
-	if(node == NULL)
-		return UA_STATUSCODE_BADNODEIDUNKNOWN;
-	//No need to copy the node, as they are only temporary constructed
-	*nodeOut = node;
-	return UA_STATUSCODE_GOOD;
+	return UA_STATUSCODE_BADNOTIMPLEMENTED;
 }
 
 static UA_StatusCode replaceNode(void *context, UA_Node *node){
