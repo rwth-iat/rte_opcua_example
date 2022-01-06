@@ -38,16 +38,17 @@ OV_DLLFNCEXPORT void template_interface_shutdown(
 
 	/* set the object's state to "shut down" */
 	ov_object_shutdown(pobj);
-
 	return;
 }
 
-OV_DLLFNCEXPORT OV_BOOL template_interface_checkNode(
-		OV_INSTPTR_opcua_interface pInterface, OV_INSTPTR_ov_object pObj,
-		OV_STRING virtualNodePath) {
-	// Check if a functionchart is accessed via OPC UA and tell the OV switch (ovSwitch) to use our interface for the transformation
-	if (Ov_CanCastTo(fb_functionchart, pObj)) {
-		return TRUE;
-	}
-	return FALSE;
+OV_DLLFNCEXPORT OV_RESULT template_interface_load(OV_INSTPTR_opcua_interface pInterface, UA_Server* pServer) {
+	return OV_ERR_OK;
+}
+
+OV_DLLFNCEXPORT OV_BOOL template_interface_checkNode(OV_INSTPTR_opcua_interface pInterface, OV_INSTPTR_ov_object pObj, OV_STRING virtualNodePath) {
+    return FALSE;
+}
+
+OV_DLLFNCEXPORT OV_BOOL template_interface_checkReference(OV_INSTPTR_opcua_interface pInterface, OV_INSTPTR_ov_object pObj, UA_Node* pNode, UA_Byte refTypeIndex) {
+    return FALSE;
 }
