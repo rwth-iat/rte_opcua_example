@@ -1,0 +1,25 @@
+###########################
+# UaModeler Project File  #
+# Generated at 10.01.2022 #
+###########################
+
+PROJECTNAME = Nodeset
+
+TEMPLATESET = ($TEMPLATES)/modeling/v1_0/t0/modeling.tt2set
+
+MODELS += ($MODELS)/Opc.Ua.NodeSet2.ua \
+    nodeset.ua
+
+COLORS = ($MODELS)/Opc.Ua.NodeSet2.ua: #0000ff\
+    nodeset.ua: #008000
+
+OUTPUTPATH = ../Paper Haitham
+
+GENERATE += nodeset.ua
+
+NODEACCESSINFOROLES += Administrator \
+    SecurityAdmin \
+    ConfigurationAdmin \
+    Operator \
+    Observer
+

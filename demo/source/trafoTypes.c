@@ -13,10 +13,12 @@
 
 #include "trafoTypes.h"
 #include "fb_macros.h"
+#include "fb_namedef.h"
 #include "opcua.h"
 #include "helpers.h"
 #include "nsSwitch.h"
 #include "nodeset_generated_handling.h"
+#include "nodeset_ids.h"
 
 /*
  * Static helper functions to create or transform functioncharts and parts.
@@ -125,23 +127,23 @@ static UA_Node *
 transformId(const UA_Server * server, const UA_NodeId * nodeId, OV_STRING parentPath){
 	OV_INSTPTR_ov_object pParent = ov_path_getobjectpointer(parentPath, 2);
 	UA_VariableNode * node = (UA_VariableNode*) transformGenericObject(server,
-			"id", "Virtual id variable, which is a struct containing idH and idL.",
+			"id", "Virtual id variable, which is a struct containing idH and idL of an ov object.",
 			UA_NODECLASS_VARIABLE, nodeId,
 			UA_NODEID_STRING(nodeId->namespaceIndex, parentPath), pParent->v_identifier,
 			UA_NS0ID_PROPERTYTYPE, "PropertyType");
 
 	//Set datatype node id, which is our Identifier datatype node from the nodeset
-	node->dataType = UA_NODEID_NUMERIC(2, 3002);
+	node->dataType = UA_NODEID_NUMERIC(2, UA_NS2ID_IDENTIFIERTYPE);
 
 	//Get value and transform to OPC UA
 	UA_Variant* pVariant = &node->value.data.value.value;
 	UA_Variant_init(pVariant);
-	pVariant->type = &UA_NODESET[UA_NODESET_IDENTIFIER];
-	pVariant->data = UA_Identifier_new();
-	UA_Identifier id;
+	pVariant->type = &UA_NODESET[UA_NODESET_IDENTIFIERTYPE];
+	pVariant->data = UA_IdentifierType_new();
+	UA_IdentifierType id;
 	id.idH = pParent->v_idH;
 	id.idL = pParent->v_idL;
-	UA_Identifier_copy(&id, pVariant->data);
+	UA_IdentifierType_copy(&id, pVariant->data);
 
 	//Set other variable attributes
 	node->accessLevel = UA_ACCESSLEVELMASK_READ;
@@ -164,21 +166,25 @@ transformActimode(const UA_Server * server,	const UA_NodeId * nodeId, OV_STRING 
 	OV_INSTPTR_ov_object pParent = ov_path_getobjectpointer(parentPath, 2);
 	OV_INSTPTR_fb_functionchart pChart = Ov_StaticPtrCast(fb_functionchart, pParent);
 	UA_VariableNode * node = (UA_VariableNode*) transformGenericObject(server,
-			"actimode", "Transformed actimode from fb_task class, with restricted ON(1) OFF(0) value as enumeration.",
+			"actimode", "Transformed actimode from fb_task class, with value as enumeration.",
 			UA_NODECLASS_VARIABLE, nodeId,
 			UA_NODEID_STRING(nodeId->namespaceIndex, parentPath), pParent->v_identifier,
 			UA_NS0ID_PROPERTYTYPE, "PropertyType");
 
 	//Set datatype node id, which is our Actimode datatype node from the nodeset
-	node->dataType = UA_NODEID_NUMERIC(2, 2);
+	node->dataType = UA_NODEID_NUMERIC(2, UA_NS2ID_ACTIMODETYPE);
 
 	//Get value and transform to OPC UA
 	UA_Variant* pVariant = &node->value.data.value.value;
 	UA_Variant_init(pVariant);
-	pVariant->type = &UA_NODESET[UA_NODESET_ACTIMODE];
-	pVariant->data = UA_Actimode_new();
-	UA_Actimode actimode = pChart->v_actimode > 0 ? UA_ACTIMODE_ON : UA_ACTIMODE_OFF;
-	UA_Actimode_copy(&actimode, pVariant->data);
+	pVariant->type = &UA_NODESET[UA_NODESET_ACTIMODETYPE];
+	pVariant->data = UA_ActimodeType_new();
+	UA_ActimodeType actimode = FB_AM_OFF;
+	if(pChart->v_actimode == FB_AM_ON) actimode = UA_ACTIMODETYPE_ON;
+	else if (pChart->v_actimode == FB_AM_UNLINK) actimode = UA_ACTIMODETYPE_UNLINK;
+	else if (pChart->v_actimode == FB_AM_ONCE) actimode = UA_ACTIMODETYPE_ONCE;
+	else if (pChart->v_actimode == FB_AM_CATCHUP) actimode = UA_ACTIMODETYPE_CATCHUP;
+	UA_ActimodeType_copy(&actimode, pVariant->data);
 
 	//Set other variable attributes
 	node->accessLevel = UA_ACCESSLEVELMASK_READ;
@@ -227,7 +233,10 @@ transformFunctionChart(OV_INSTPTR_fb_functionchart pobj, const UA_Server * serve
 /*
  * Nodestore API functions
  */
-static const UA_Node * getNode(void * context, const UA_NodeId *nodeId){
+static const UA_Node * getNode(void * context, const UA_NodeId *nodeId,
+                               UA_UInt32 attributeMask,
+                               UA_ReferenceTypeSet references,
+                               UA_BrowseDirection referenceDirections){
 	UA_Node * 						node = NULL;
 	OV_INSTPTR_ov_object			pobj = NULL;
 	OV_INSTPTR_demo_interfaceTypes 	pinterface = Ov_StaticPtrCast(demo_interfaceTypes, context);
@@ -283,12 +292,7 @@ static void releaseNode(void *context, const UA_Node *node){
 }
 
 static UA_StatusCode getNodeCopy(void *context, const UA_NodeId *nodeId, UA_Node ** nodeOut){
-	UA_Node* node = (UA_Node*) getNode(context, nodeId);
-	if(node == NULL)
-		return UA_STATUSCODE_BADNODEIDUNKNOWN;
-	//No need to copy the node, as they are only temporary constructed
-	*nodeOut = node;
-	return UA_STATUSCODE_GOOD;
+	return UA_STATUSCODE_BADNOTIMPLEMENTED;
 }
 
 static UA_StatusCode replaceNode(void *context, UA_Node *node){
@@ -330,10 +334,11 @@ trafoTypes_new(OV_INSTPTR_demo_interfaceTypes context) {
 	// The server can be accessed via opcua_serverToInterfaces association
     ns->context = 		context;
 
-	// Get a immutable node, and release it if not used anymor
+	// Get a immutable node, and release it if not used anymore
 	// This is the main function, that needs to be implemented for unidirectional transformations
 	// from OV to OPC UA (without OPC UA nodemanagement services and back transformation)
     ns->getNode =		getNode;
+	ns->getNodeFromPtr =NULL; // redirected to getNode by nsSwitch
     ns->releaseNode =	releaseNode;
 	// Needed to change OV values, e.g. to write variable values
 	// The UA_Server obtaines a copy, changes it and calls replaceNode

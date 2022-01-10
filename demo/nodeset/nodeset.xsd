@@ -1,0 +1,38 @@
+<xs:schema elementFormDefault="qualified" targetNamespace="http://github.com/acplt/rte_opcua_example/Nodeset/Types.xsd" xmlns:tns="http://github.com/acplt/rte_opcua_example/Nodeset/Types.xsd" xmlns:ua="http://opcfoundation.org/UA/2008/02/Types.xsd" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:import namespace="http://opcfoundation.org/UA/2008/02/Types.xsd"/>
+    <xs:simpleType name="ActimodeType">
+        <xs:annotation>
+            <xs:documentation>Enumeration data type for an actimode of a fb task (c.f. FB_AM_... in fb_namedef.h)</xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="OFF_0"/>
+            <xs:enumeration value="ON_1"/>
+            <xs:enumeration value="UNLINK_2"/>
+            <xs:enumeration value="ONCE_3"/>
+            <xs:enumeration value="CATCHUP_10"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:element type="tns:ActimodeType" name="ActimodeType"/>
+    <xs:complexType name="ListOfActimodeType">
+        <xs:sequence>
+            <xs:element minOccurs="0" maxOccurs="unbounded" type="tns:ActimodeType" name="ActimodeType" nillable="true"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:element type="tns:ListOfActimodeType" name="ListOfActimodeType" nillable="true"/>
+    <xs:complexType name="IdentifierType">
+        <xs:annotation>
+            <xs:documentation>Id struct to represent idH and idL of an ov object.</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element minOccurs="0" maxOccurs="1" type="xs:unsignedInt" name="idH"/>
+            <xs:element minOccurs="0" maxOccurs="1" type="xs:unsignedInt" name="idL"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:element type="tns:IdentifierType" name="IdentifierType"/>
+    <xs:complexType name="ListOfIdentifierType">
+        <xs:sequence>
+            <xs:element minOccurs="0" maxOccurs="unbounded" type="tns:IdentifierType" name="IdentifierType" nillable="true"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:element type="tns:ListOfIdentifierType" name="ListOfIdentifierType" nillable="true"/>
+</xs:schema>

@@ -1,0 +1,8 @@
+Functionchart,1,ObjectType
+ActimodeType,2,DataType
+IdentifierType,3,DataType
+IdentifierType_Encoding_DefaultBinary,4,Object
+IdentifierType_Encoding_DefaultXml,5,Object
+ActimodeType_EnumValues,8,Variable
+Functionchart_id,15,Variable
+Functionchart_actimode,16,Variable

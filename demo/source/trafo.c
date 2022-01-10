@@ -543,7 +543,10 @@ transformFunctionChart(
 /*
  * Nodestore API functions
  */
-static const UA_Node * getNode(void * context, const UA_NodeId *nodeId){
+static const UA_Node * getNode(void * context, const UA_NodeId *nodeId,
+                               UA_UInt32 attributeMask,
+                               UA_ReferenceTypeSet references,
+                               UA_BrowseDirection referenceDirections){
 	UA_Node * 						node = NULL;
 	OV_INSTPTR_ov_object			pobj = NULL;
 	OV_INSTPTR_demo_interface 		pinterface = Ov_StaticPtrCast(demo_interface, context);
@@ -663,10 +666,11 @@ trafo_new(OV_INSTPTR_demo_interface context) {
 	// The server can be accessed via opcua_serverToInterfaces association
     ns->context = 		context;
 
-	// Get a immutable node, and release it if not used anymor
+	// Get a immutable node, and release it if not used anymore
 	// This is the main function, that needs to be implemented for unidirectional transformations
 	// from OV to OPC UA (without OPC UA nodemanagement services and back transformation)
     ns->getNode =		getNode;
+	ns->getNodeFromPtr = 	NULL; // redirected to getNode by nsSwitch
     ns->releaseNode =	releaseNode;
 	// Needed to change OV values, e.g. to write variable values
 	// The UA_Server obtaines a copy, changes it and calls replaceNode
