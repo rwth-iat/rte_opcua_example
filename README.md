@@ -10,7 +10,7 @@ The example fbd for the demo contains an OPC UA server from `opcua` ov library, 
 
 ![iFBSpro Screenshot](doc/ifbspro-screenshot-functionchart.png "iFBSpro screenshot showing the example functionchart")
 
-The example functionchart contains three input ports (In1Bool, In2Int, In3String) from different types
+The example functionchart contains three input ports (In1Bool, In2Int, In3String) from different types.
 They are connected to an output port (Out1Bool, Out2Int, Out3String) of the corresponding type each.
 The fb connections are contained in the ExampleFunctionchart.
 The idea of the demo library is to change the generic transformation of fb functioncharts as shown in the next two screenshots.
@@ -59,7 +59,7 @@ View the ov_runtimeserver from OPC UA Client:
 * connect via an OPC UA client to `opc.tcp://localhost:4840`
 * browse to `0:Root/0:Objects/1://1:TechUnits/1:ExampleFunctionchart`
 
-=> the ExampleFunctionchart should look like:
+=> the transformed functionchart should look like this from an OPC UA client:
 
 ![UaExpert Screenshot](doc/uaexpert-screenshot-functionchart.png "UaExpert screenshot showing the transformed functionchart")
 
@@ -79,6 +79,11 @@ The demo library contains a second example with a `interfaceTypes` class and cor
 
 * Actimode: an enumeration with values ON, OFF, UNLINK, ONCE and CATCHUP that should represent the actimode of fb tasks.
 * Identifier: a struct that consists off two integers idH and idL (ids of OV objects).
+
+To test the demo with nodeset and data types follow the section [Run the demo](#run-the-demo), but load the [DemoTypes.fbd](doc/DemoTypes.fbd) instead of Demo.fbd.
+The ExampleFunctionchart is named Functionchart here and its transformed version should look like this:
+
+![UaExpert Screenshot](doc/uaexpert-screenshot-functionchart-types.png "UaExpert screenshot showing the transformed id and actimode variables with custom data types.")
 
 ### Nodeset generation hints
 

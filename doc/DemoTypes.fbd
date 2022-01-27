@@ -72,25 +72,9 @@
  LINK
      OF_ASSOCIATION tasklist;
      PARENT taskparent : CLASS unknown
-           = /TechUnits/Functionchart;
-     CHILDREN taskchild : CLASS unknown
-           = {/TechUnits/Functionchart.intask};
- END_LINK;
-
- LINK
-     OF_ASSOCIATION tasklist;
-     PARENT taskparent : CLASS unknown
            = /Tasks/UrTask;
      CHILDREN taskchild : CLASS unknown
            = {/TechUnits/Functionchart};
- END_LINK;
-
- LINK
-     OF_ASSOCIATION tasklist;
-     PARENT taskparent : CLASS unknown
-           = /TechUnits/Functionchart;
-     CHILDREN taskchild : CLASS unknown
-           = {/TechUnits/Functionchart.intask};
  END_LINK;
 
  LINK
@@ -99,14 +83,6 @@
            = /TechUnits/Server;
      CHILDREN interfaces : CLASS unknown
            = {/TechUnits/Server/InterfaceTypes};
- END_LINK;
-
- LINK
-     OF_ASSOCIATION AssocComTaskList;
-     PARENT RootComTask : CLASS unknown
-           = /communication/RootComTask;
-     CHILDREN comtaskchild : CLASS unknown
-           = {/TechUnits/Server};
  END_LINK;
 
  LINK
