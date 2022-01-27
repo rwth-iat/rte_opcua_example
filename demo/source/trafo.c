@@ -14,9 +14,8 @@
 #include "trafo.h"
 #include "fb_macros.h"
 #include "opcua.h"
-#include "helpers.h"
-#include "nsSwitch.h"
-
+#include "opcua_helpers.h"
+#include "opcua_nsSwitch.h"
 /*
  * Static helper functions to create or transform functioncharts and parts.
  * All used by the getNode nodestore function.
@@ -543,10 +542,7 @@ transformFunctionChart(
 /*
  * Nodestore API functions
  */
-static const UA_Node * getNode(void * context, const UA_NodeId *nodeId,
-                               UA_UInt32 attributeMask,
-                               UA_ReferenceTypeSet references,
-                               UA_BrowseDirection referenceDirections){
+static const UA_Node * getNode(void * context, const UA_NodeId *nodeId){
 	UA_Node * 						node = NULL;
 	OV_INSTPTR_ov_object			pobj = NULL;
 	OV_INSTPTR_demo_interface 		pinterface = Ov_StaticPtrCast(demo_interface, context);
@@ -670,7 +666,6 @@ trafo_new(OV_INSTPTR_demo_interface context) {
 	// This is the main function, that needs to be implemented for unidirectional transformations
 	// from OV to OPC UA (without OPC UA nodemanagement services and back transformation)
     ns->getNode =		getNode;
-	ns->getNodeFromPtr = 	NULL; // redirected to getNode by nsSwitch
     ns->releaseNode =	releaseNode;
 	// Needed to change OV values, e.g. to write variable values
 	// The UA_Server obtaines a copy, changes it and calls replaceNode

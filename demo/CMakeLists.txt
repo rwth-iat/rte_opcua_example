@@ -5,15 +5,9 @@
 add_ov_library(demo)
 ov_library_includes(demo fb opcua)
 
-if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
-    target_link_libraries(demo PRIVATE -lm)
-endif()
-
 ##############################
 # TODO Parse example nodeset #
 ##############################
-
-add_definitions(-DUA_ENABLE_AMALGAMATION)
 
 # set(NODESET_DIRPREFIX ${CMAKE_SOURCE_DIR}/rte/syslibs/opcua/nodeset)
 # set(open62541_TOOLS_DIR ${CMAKE_SOURCE_DIR}/rte/syslibs/opcua/open62541/tools)

@@ -6,7 +6,7 @@
 #include "ov_macros.h"
 #include "trafoTypes.h"
 #include "nodeset.h"
-#include "helpers.h"
+#include "opcua_helpers.h"
 #include "nodeset_generated.h"
 
 

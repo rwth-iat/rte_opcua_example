@@ -4,7 +4,7 @@ project(rte_opcua_example C)
 
 # Disable default build of unrequired libraries
 SET(BUILD_OV_LIBRARY_cshmi OFF CACHE BOOL "")
-SET(BUILD_OV_LIBRARY_cshmi OFF CACHE BOOL "")
+SET(BUILD_OV_LIBRARY_ssc OFF CACHE BOOL "")
 SET(BUILD_OV_LIBRARY_UDPbind OFF CACHE BOOL "")
 
 # Include ov core
